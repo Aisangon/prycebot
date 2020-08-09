@@ -13,15 +13,9 @@ import logging
 
 class PriceBot():
 
-    @classmethod
-    def from_crawler(cls, crawler, *args, **kwargs):
-        spider = super(QuotesSpider, cls).from_crawler(crawler, *args, **kwargs)
-        crawler.signals.connect(spider.spider_closed, signal=signals.spider_closed)
-        return spider
-
-    def __init__(self):
+    def __init__(self, crawler):
+        self.crawler = crawler
         self.process = CrawlerProcess()
-        # self.shop = Shop4DeSpider()
         TG_TOKEN = config('TELEGRAM_TOKEN')
 
         logger = logging.getLogger(__name__)
@@ -52,12 +46,8 @@ class PriceBot():
         update.message.reply_text(update.message.text)
 
     def crawl(self, update, context):
-        self.process.crawl(QuotesSpider)
+        self.process.crawl(self.crawler)
         self.process.start()
 
-    def spider_closed(self, spider):
-        # spider.logger.info('Spider closed: %s', spider.name)
-        print("Heeeyyy")
-
 if __name__ == '__main__':
-    pricebot = PriceBot()
+    pricebot = PriceBot(QuotesSpider)
