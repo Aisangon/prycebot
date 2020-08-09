@@ -1,5 +1,11 @@
+import os, sys
+dir_path = os.path.dirname(os.path.realpath(__file__))
+parent_dir_path = os.path.abspath(os.path.join(dir_path, os.pardir))
+sys.path.insert(0, parent_dir_path)
+
 from decouple import config
-# from pricebot.spiders import Shop4DeSpider
+from pricebot.spiders.shop4de import Shop4DeSpider
+from pricebot.spiders.quotes_spider import QuotesSpider
 from scrapy import signals
 from scrapy.crawler import CrawlerProcess
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
@@ -7,8 +13,15 @@ import logging
 
 class PriceBot():
 
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = super(QuotesSpider, cls).from_crawler(crawler, *args, **kwargs)
+        crawler.signals.connect(spider.spider_closed, signal=signals.spider_closed)
+        return spider
+
     def __init__(self):
         self.process = CrawlerProcess()
+        # self.shop = Shop4DeSpider()
         TG_TOKEN = config('TELEGRAM_TOKEN')
 
         logger = logging.getLogger(__name__)
@@ -39,8 +52,12 @@ class PriceBot():
         update.message.reply_text(update.message.text)
 
     def crawl(self, update, context):
-        self.process.crawl('shop4de')
+        self.process.crawl(QuotesSpider)
         self.process.start()
+
+    def spider_closed(self, spider):
+        # spider.logger.info('Spider closed: %s', spider.name)
+        print("Heeeyyy")
 
 if __name__ == '__main__':
     pricebot = PriceBot()
