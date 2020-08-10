@@ -46,8 +46,14 @@ class PriceBot():
         update.message.reply_text(update.message.text)
 
     def crawl(self, update, context):
-        self.process.crawl(self.crawler)
+        d = self.process.crawl(self.crawler)
+        d.addCallback(lambda result: self.successCallback(result, update))
         self.process.start()
+
+    def successCallback(self, result, update):
+        print("send!!!")
+        update.message.reply_text(self.crawler.message)
+        return result
 
 if __name__ == '__main__':
     pricebot = PriceBot(QuotesSpider)

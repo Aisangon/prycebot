@@ -3,6 +3,7 @@ from scrapy import signals
 
 class QuotesSpider(scrapy.Spider):
     name = "quotes"
+    message = "Hi"
 
     start_urls = [
         'http://quotes.toscrape.com/page/1/',
@@ -12,7 +13,7 @@ class QuotesSpider(scrapy.Spider):
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
         spider = super(QuotesSpider, cls).from_crawler(crawler, *args, **kwargs)
-        crawler.signals.connect(spider.spider_closed, signal=signals.spider_closed)
+        crawler.signals.connect(spider.response_received, signal=signals.response_received)
         return spider
 
     def parse(self, response):
@@ -22,7 +23,14 @@ class QuotesSpider(scrapy.Spider):
                 'author': quote.css('small.author::text').get(),
                 'tags': quote.css('div.tags a.tag::text').getall(),
             }
+
+    def get_message(self, response):
+        self.message = response
+
+    def item_scraped(self, item, response):
+        self.get_message(response)
+
+    def response_received(self, response, request, spider):
+        print("received!!!")
+        self.message = response
     
-    def spider_closed(self, spider):
-        # spider.logger.info('Spider closed: %s', spider.name)
-        print("Here are your results.")
