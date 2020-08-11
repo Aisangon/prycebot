@@ -3,15 +3,18 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 parent_dir_path = os.path.abspath(os.path.join(dir_path, os.pardir))
 sys.path.insert(0, parent_dir_path)
 
+import logging
 from decouple import config
 from pricebot.spiders.shop4de import Shop4DeSpider
 from pricebot.spiders.quotes_spider import QuotesSpider
 from scrapy import signals
 from scrapy.crawler import CrawlerProcess
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
-import logging
+from pubsub import pub
 
 class PriceBot():
+
+    my_list = []
 
     def __init__(self, crawler):
         self.crawler = crawler
@@ -21,6 +24,8 @@ class PriceBot():
         logger = logging.getLogger(__name__)
         logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
+
+        pub.subscribe(self.listener, 'rootTopic')
 
         updater = Updater(TG_TOKEN, use_context=True)
         dp = updater.dispatcher
@@ -48,11 +53,15 @@ class PriceBot():
     def crawl(self, update, context):
         d = self.process.crawl(self.crawler)
         d.addCallback(lambda result: self.successCallback(result, update))
-        self.process.start()
+        self.process.start(stop_after_crawl=True)
+
+    def listener(self, arg1):
+        self.my_list.append(arg1)
+        return self.my_list
 
     def successCallback(self, result, update):
-        print("send!!!")
-        update.message.reply_text(self.crawler.message)
+        update.message.reply_text(self.my_list)
+        # self.process.stop()
         return result
 
 if __name__ == '__main__':
