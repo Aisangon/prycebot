@@ -10,13 +10,6 @@ class QuotesSpider(scrapy.Spider):
         'http://quotes.toscrape.com/page/2/',
     ]
 
-    @classmethod
-    def from_crawler(cls, crawler, *args, **kwargs):
-        spider = super(QuotesSpider, cls).from_crawler(crawler, *args, **kwargs)
-        # crawler.signals.connect(spider.response_received, signal=signals.response_received)
-        crawler.signals.connect(spider.item_scraped, signal=signals.item_scraped)
-        return spider
-
     def parse(self, response):
         for quote in response.css('div.quote'):
             yield {
@@ -24,12 +17,4 @@ class QuotesSpider(scrapy.Spider):
                 'author': quote.css('small.author::text').get()
                 # 'tags': quote.css('div.tags a.tag::text').getall(),
             }
-
-    def item_scraped(self, item, response):
-        pub.sendMessage('rootTopic', arg1=item)
-
-    # def response_received(self, response, request, spider):
-    #     # print("received!!!")
-    #     self.message = response
-    #     pub.sendMessage('rootTopic', arg1="Yooo!!!")
     

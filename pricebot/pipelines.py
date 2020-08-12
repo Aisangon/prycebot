@@ -6,8 +6,10 @@
 
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
+from pubsub import pub
 
 
 class PricebotPipeline:
     def process_item(self, item, spider):
+        pub.sendMessage('rootTopic', arg1=item)
         return item

@@ -9,6 +9,7 @@ from pricebot.spiders.shop4de import Shop4DeSpider
 from pricebot.spiders.quotes_spider import QuotesSpider
 from scrapy import signals
 from scrapy.crawler import CrawlerProcess
+from scrapy.utils.project import get_project_settings
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from pubsub import pub
 
@@ -18,7 +19,7 @@ class PriceBot():
 
     def __init__(self, crawler):
         self.crawler = crawler
-        self.process = CrawlerProcess()
+        self.process = CrawlerProcess(get_project_settings())
         TG_TOKEN = config('TELEGRAM_TOKEN')
 
         logger = logging.getLogger(__name__)
