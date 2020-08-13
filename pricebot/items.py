@@ -10,3 +10,10 @@ class PricebotItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
     pass
+
+class Product(scrapy.Item):
+    name = scrapy.Field()
+    price = scrapy.Field()
+
+class Book(scrapy.Item):
+    author = scrapy.Field()

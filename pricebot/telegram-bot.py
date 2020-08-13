@@ -61,7 +61,9 @@ class PriceBot():
         return self.my_list
 
     def successCallback(self, result, update):
-        update.message.reply_text(self.my_list)
+        for message in self.my_list:
+            update.message.reply_text(message, parse_mode='HTML')
+        # update.message.reply_text(''.join(self.my_list), parse_mode=ParseMode.HTML)
         # self.process.stop()
         return result
 

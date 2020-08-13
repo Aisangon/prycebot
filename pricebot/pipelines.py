@@ -11,5 +11,6 @@ from pubsub import pub
 
 class PricebotPipeline:
     def process_item(self, item, spider):
-        pub.sendMessage('rootTopic', arg1=item)
+        html = '<i>' + '- ' + item['author'] + '</i>'
+        pub.sendMessage('rootTopic', arg1=html)
         return item
