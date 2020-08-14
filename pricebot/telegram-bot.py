@@ -10,6 +10,7 @@ from pricebot.spiders.quotes_spider import QuotesSpider
 from scrapy import signals
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
+from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler
 from pubsub import pub
 from threading import Thread
@@ -17,7 +18,8 @@ from threading import Thread
 class PriceBot():
 
     scraped_items = []
-    TYPEIN,  CRAWL, RESTART = range(3)
+    TYPEIN, CONFIRM, RESTART = range(3)
+    temp_query = ''
 
     def __init__(self, crawler):
         self.crawler = crawler
@@ -31,31 +33,39 @@ class PriceBot():
 
         self.initBot()
 
-    # def echo(self, update, context):
-    #     update.message.reply_text(update.message.text)
+    def start(self, update, context):
+        # user = update.message.from_user
+        update.message.reply_text('Hi! Please type in what you want to scrape.')
+
+        return self.TYPEIN
 
     def typeIn(self, update, context):
-        user = update.message.from_user
-        update.message.reply_text('Hi' + user + '! Please type in what you want to scrape.')
+        self.setQuery(update.message.text)
+        reply_keyboard = [['Yes', 'No']]
 
-        return CRAWL
+        update.message.reply_text('Start scraping your choice?',
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+
+        return self.CONFIRM
 
     def crawl(self, update, context):
         d = self.process.crawl(self.crawler)
         d.addCallback(lambda result: self.successCallback(result, update))
+        pub.sendMessage('queryTopic', query=self.temp_query)
         self.process.start(stop_after_crawl=True)
 
-        return RESTART
+        return self.RESTART
 
     def cancel(self, update, context):
-        update.message.reply_text('Bye! I hope we can talk again some day.',
-                                reply_markup=ReplyKeyboardRemove())
+        update.message.reply_text('Bye! I hope we can talk again some day.')
 
         return ConversationHandler.END
 
     def restart(self, update, context):
         update.message.reply_text('Bot is restarting...')
         Thread(target=self.stop_and_restart).start()
+
+        return ConversationHandler.END
 
     def stop_and_restart(self):
         self.updater.stop()
@@ -66,18 +76,26 @@ class PriceBot():
         return self.scraped_items
 
     def successCallback(self, result, update):
+        reply_keyboard = [['Another', 'Done']]
         for message in self.scraped_items:
             update.message.reply_text(message, parse_mode='HTML')
-        return result
+
+        update.message.reply_text('These are your results! What would you want to do next?',
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+
+    def setQuery(self, query):
+        self.temp_query = query
+        return self.temp_query
 
     def initBot(self):
-
         conv_handler = ConversationHandler(
-            entry_points=[CommandHandler('hi', start)],
+            entry_points=[CommandHandler('hi', self.start)],
             states={
-                TYPEIN: [MessageHandler(Filters.text & ~Filters.command, self.typeIn)],
-                CRAWL: [MessageHandler(Filters.text & ~Filters.command, self.crawl)],
-                RESTART: [MessageHandler(Filters.text & ~Filters.command, self.restart)]
+                self.TYPEIN: [MessageHandler(Filters.text & ~Filters.command, self.typeIn)],
+                self.CONFIRM: [MessageHandler(Filters.regex('^(Yes)$'), self.crawl),
+                        MessageHandler(Filters.regex('^(No)$'), self.typeIn)],
+                self.RESTART: [MessageHandler(Filters.regex('^(Another$)'), self.restart),
+                        MessageHandler(Filters.regex('^(Done)$'), self.cancel)]
             },
             fallbacks=[CommandHandler('cancel', self.cancel)]
         )
@@ -85,11 +103,8 @@ class PriceBot():
         TG_TOKEN = config('TELEGRAM_TOKEN')
         self.updater = Updater(TG_TOKEN, use_context=True)
         dp = self.updater.dispatcher
-
         dp.add_handler(conv_handler)
-        # dp.add_handler(CommandHandler("crawl", self.crawl))
-        # dp.add_handler(MessageHandler(Filters.text & ~Filters.command, self.echo))
-        # dp.add_handler(CommandHandler('r', self.restart))
+        dp.add_handler(CommandHandler('r', self.restart))
 
         self.updater.start_polling()
         self.updater.idle()
