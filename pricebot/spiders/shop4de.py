@@ -1,4 +1,6 @@
 import scrapy
+from pricebot.items import Product
+from itemadapter import ItemAdapter
 
 
 class Shop4DeSpider(scrapy.Spider):
@@ -8,10 +10,11 @@ class Shop4DeSpider(scrapy.Spider):
 
     def parse(self, response):
         for product in response.css("div.product_box"):
-            yield {
-                'name': product.css("div.top_half h3.title a::text").get(),
-                'price': product.css("div.bot_half b.price::text").get()
-            }
+            game = Product()
+            game['name'] = product.css("div.top_half h3.title a::text").get()
+            game['price'] = product.css("div.bot_half b.price::text").get()
+            game['url'] = product.css("div.top_half h3.title a::attr(href)").get()
+            yield ItemAdapter(game).asdict()
 
         current_page = response.css('a#load_more::attr(data-page)').get()
         if current_page is not None:
