@@ -7,10 +7,24 @@
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
 from pubsub import pub
+from re import search
 
 
 class PricebotPipeline:
+
+    filter_query = ''
+    def __init__(self):
+        super().__init__()
+        pub.subscribe(self.listener2, 'queryTopic')
+
     def process_item(self, item, spider):
-        html = '<i>' + '- ' + item['author'] + '</i>'
-        pub.sendMessage('rootTopic', arg1=html)
+        if search(self.filter_query.lower(), str(item['author']).lower()):
+            html = '<i>' + '- ' + item['author'] + '</i>'
+            pub.sendMessage('rootTopic', arg1=html)
+            
         return item
+
+    def listener2(self, query):
+        self.filter_query = query
+        return self.filter_query
+
