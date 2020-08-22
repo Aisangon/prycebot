@@ -14,6 +14,7 @@ class PricebotItem(scrapy.Item):
 class Product(scrapy.Item):
     name = scrapy.Field()
     price = scrapy.Field()
+    url = scrapy.Field()
 
 class Book(scrapy.Item):
     author = scrapy.Field()

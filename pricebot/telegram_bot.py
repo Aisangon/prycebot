@@ -5,8 +5,6 @@ sys.path.insert(0, parent_dir_path)
 
 import logging
 from decouple import config
-from pricebot.spiders.shop4de import Shop4DeSpider
-from pricebot.spiders.quotes_spider import QuotesSpider
 from scrapy import signals
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
@@ -14,6 +12,7 @@ from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler
 from pubsub import pub
 from threading import Thread
+from pricebot.all_spiders import AllSpiders
 
 class PriceBot():
 
@@ -21,8 +20,8 @@ class PriceBot():
     TYPEIN, CONFIRM, RESTART = range(3)
     temp_query = ''
 
-    def __init__(self, crawler):
-        self.crawler = crawler
+    def __init__(self, spiders):
+        self.spiders = spiders
         self.process = CrawlerProcess(get_project_settings())
 
         logger = logging.getLogger(__name__)
@@ -34,8 +33,8 @@ class PriceBot():
         self.initBot()
 
     def start(self, update, context):
-        # user = update.message.from_user
-        update.message.reply_text('Hi! Please type in what you want to scrape.')
+        user = update.message.from_user
+        update.message.reply_text('Hi {0}! Please type in what you want to scrape.'.format(user.first_name))
 
         return self.TYPEIN
 
@@ -49,7 +48,10 @@ class PriceBot():
         return self.CONFIRM
 
     def crawl(self, update, context):
-        d = self.process.crawl(self.crawler)
+        for spider in self.spiders:
+            self.process.crawl(spider)
+
+        d = self.process.join()
         d.addCallback(lambda result: self.successCallback(result, update))
         pub.sendMessage('queryTopic', query=self.temp_query)
         self.process.start(stop_after_crawl=True)
@@ -110,4 +112,5 @@ class PriceBot():
         self.updater.idle()
 
 if __name__ == '__main__':
-    pricebot = PriceBot(QuotesSpider)
+    allSpiders = AllSpiders()
+    pricebot = PriceBot(allSpiders.get_list())
