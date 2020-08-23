@@ -4,6 +4,11 @@ parent_dir_path = os.path.abspath(os.path.join(dir_path, os.pardir))
 sys.path.insert(0, parent_dir_path)
 PORT = int(os.environ.get('PORT', 5000))
 
+import asyncio
+
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 import logging
 from decouple import config
 from scrapy import signals
@@ -103,12 +108,13 @@ class PriceBot():
             fallbacks=[CommandHandler('cancel', self.cancel)]
         )
 
-        TG_TOKEN = config('TELEGRAM_TOKEN')
+        TG_TOKEN = os.getenv('TELEGRAM_TOKEN', config('TELEGRAM_TOKEN'))
         self.updater = Updater(TG_TOKEN, use_context=True)
         dp = self.updater.dispatcher
         dp.add_handler(conv_handler)
         dp.add_handler(CommandHandler('r', self.restart))
 
+        # self.updater.start_polling()
         self.updater.start_webhook(listen="0.0.0.0", 
                                     port=int(PORT),
                                     url_path=TG_TOKEN)
