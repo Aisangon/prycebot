@@ -2,6 +2,7 @@ import os, sys
 dir_path = os.path.dirname(os.path.realpath(__file__))
 parent_dir_path = os.path.abspath(os.path.join(dir_path, os.pardir))
 sys.path.insert(0, parent_dir_path)
+PORT = int(os.environ.get('PORT', 5000))
 
 import logging
 from decouple import config
@@ -108,7 +109,10 @@ class PriceBot():
         dp.add_handler(conv_handler)
         dp.add_handler(CommandHandler('r', self.restart))
 
-        self.updater.start_polling()
+        self.updater.start_webhook(listen="0.0.0.0", 
+                                    port=int(PORT),
+                                    url_path=TG_TOKEN)
+        self.updater.bot.setWebhook('https://lit-beach-26560.herokuapp.com/' + TG_TOKEN)
         self.updater.idle()
 
 if __name__ == '__main__':
