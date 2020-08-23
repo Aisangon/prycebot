@@ -101,7 +101,7 @@ class PriceBot():
             states={
                 self.TYPEIN: [MessageHandler(Filters.text & ~Filters.command, self.typeIn)],
                 self.CONFIRM: [MessageHandler(Filters.regex('^(Yes)$'), self.crawl),
-                        MessageHandler(Filters.regex('^(No)$'), self.typeIn)],
+                        MessageHandler(Filters.regex('^(No)$'), self.start)],
                 self.RESTART: [MessageHandler(Filters.regex('^(Another$)'), self.restart),
                         MessageHandler(Filters.regex('^(Done)$'), self.cancel)]
             },
@@ -109,6 +109,7 @@ class PriceBot():
         )
 
         TG_TOKEN = os.getenv('TELEGRAM_TOKEN', config('TELEGRAM_TOKEN'))
+        HEROKU_APP = os.getenv('HEROKU_APP_URL', config('HEROKU_APP_URL'))
         self.updater = Updater(TG_TOKEN, use_context=True)
         dp = self.updater.dispatcher
         dp.add_handler(conv_handler)
@@ -118,7 +119,7 @@ class PriceBot():
         self.updater.start_webhook(listen="0.0.0.0", 
                                     port=int(PORT),
                                     url_path=TG_TOKEN)
-        self.updater.bot.setWebhook('https://lit-beach-26560.herokuapp.com/' + TG_TOKEN)
+        self.updater.bot.setWebhook(HEROKU_APP + TG_TOKEN)
         self.updater.idle()
 
 if __name__ == '__main__':
