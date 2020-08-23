@@ -1,31 +1,35 @@
-astroid==2.4.2
+attrs==19.3.0
+Automat==20.2.0
+bcrypt==3.1.7
 certifi==2020.6.20
-cffi==1.14.0
-chardet==3.0.4
-colorama==0.4.3
-conda==4.8.3
-conda-package-handling==1.7.0
-cryptography==2.9.2
-idna==2.9
-isort==4.3.21
-lazy-object-proxy==1.4.3
-mccabe==0.6.1
-menuinst==1.4.16
-pycosat==0.6.3
-pycparser==2.20
-pylint==2.5.3
+cffi @ file:///D:/bld/cffi_1595805794566/work
+constantly==15.1.0
+cryptography @ file:///D:/bld/cryptography_1595349005639/work
+cssselect==1.1.0
+decorator==4.4.2
+hyperlink==19.0.0
+idna @ file:///home/conda/feedstock_root/build_artifacts/idna_1593328102638/work
+incremental==17.5.0
+itemadapter @ file:///home/conda/feedstock_root/build_artifacts/itemadapter_1593694453559/work
+lxml @ file:///D:/bld/lxml_1594322910610/work
+parsel @ file:///home/conda/feedstock_root/build_artifacts/parsel_1591122878042/work
+Protego==0.1.16
+pyasn1==0.4.8
+pyasn1-modules==0.2.7
+pycparser @ file:///home/conda/feedstock_root/build_artifacts/pycparser_1593275161868/work
+PyDispatcher==2.0.5
+PyHamcrest==2.0.2
 pyOpenSSL==19.1.0
-PySocks==1.7.1
-pywin32==227
-requests==2.23.0
-ruamel-yaml==0.15.87
-six==1.14.0
-toml==0.10.1
-tqdm==4.46.0
-urllib3==1.25.8
-win-inet-pton==1.1.0
-wincertstore==0.2
-wrapt==1.11.2
+Pypubsub==4.0.3
+python-decouple==3.3
 python-telegram-bot==12.8
-Scrapy==2.2.1
-PyPubSub==4.0.3
+pywin32==227
+queuelib==1.5.0
+Scrapy @ file:///D:/bld/scrapy_1596134171734/work
+service-identity==18.1.0
+six @ file:///home/conda/feedstock_root/build_artifacts/six_1590081179328/work
+tornado==6.0.4
+Twisted==20.3.0
+w3lib @ file:///home/conda/feedstock_root/build_artifacts/w3lib_1591173357158/work
+wincertstore==0.2
+zope.interface==5.1.0
