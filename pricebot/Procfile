@@ -1,0 +1,1 @@
+web: python pricebot/telegram_bot.py
