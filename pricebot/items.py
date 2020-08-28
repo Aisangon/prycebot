@@ -16,5 +16,7 @@ class Product(scrapy.Item):
     price = scrapy.Field()
     url = scrapy.Field()
 
-class Book(scrapy.Item):
-    author = scrapy.Field()
+class Job(scrapy.Item):
+    position = scrapy.Field()
+    company = scrapy.Field()
+    url = scrapy.Field()

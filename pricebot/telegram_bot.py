@@ -23,8 +23,9 @@ from pricebot.all_spiders import AllSpiders
 class PriceBot():
 
     scraped_items = []
-    TYPEIN, CONFIRM, RESTART = range(3)
+    CHOOSE, TYPEIN, CONFIRM, RESTART = range(4)
     temp_query = ''
+    category_choice = ''
 
     def __init__(self, spiders):
         self.spiders = spiders
@@ -40,11 +41,26 @@ class PriceBot():
 
     def start(self, update, context):
         user = update.message.from_user
-        update.message.reply_text('Hi {0}! Please type in what you want to scrape.'.format(user.first_name))
+        reply_keyboard = [['Games', 'Jobs']]
+
+        update.message.reply_text('Hi {0}! Welcome to GoGetter. Please choose your category to scrape.'.format(user.first_name),
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+
+        return self.CHOOSE
+
+    def choose(self, update, context):
+        self.setChoice(update.message.text)
+        update.message.reply_text('Please type in what you want to scrape.')
 
         return self.TYPEIN
 
     def typeIn(self, update, context):
+        self.setChoice(update.message.text)
+        update.message.reply_text('Please type in what you want to scrape.')
+
+        return self.CONFIRM
+
+    def confirm(self, update, context):
         self.setQuery(update.message.text)
         reply_keyboard = [['Yes', 'No']]
 
@@ -95,10 +111,15 @@ class PriceBot():
         self.temp_query = query
         return self.temp_query
 
+    def setChoice(self, choice):
+        self.category_choice = choice
+        return self.temp_query
+
     def initBot(self):
         conv_handler = ConversationHandler(
             entry_points=[CommandHandler('hi', self.start)],
             states={
+                self.CHOOSE: [MessageHandler(Filters.regex('^(Games|Jobs)$'), self.choose)],
                 self.TYPEIN: [MessageHandler(Filters.text & ~Filters.command, self.typeIn)],
                 self.CONFIRM: [MessageHandler(Filters.regex('^(Yes)$'), self.crawl),
                         MessageHandler(Filters.regex('^(No)$'), self.start)],
@@ -115,11 +136,11 @@ class PriceBot():
         dp.add_handler(conv_handler)
         dp.add_handler(CommandHandler('r', self.restart))
 
-        # self.updater.start_polling()
-        self.updater.start_webhook(listen="0.0.0.0", 
-                                    port=int(PORT),
-                                    url_path=TG_TOKEN)
-        self.updater.bot.setWebhook(HEROKU_APP + TG_TOKEN)
+        self.updater.start_polling()
+        # self.updater.start_webhook(listen="0.0.0.0", 
+        #                             port=int(PORT),
+        #                             url_path=TG_TOKEN)
+        # self.updater.bot.setWebhook(HEROKU_APP + TG_TOKEN)
         self.updater.idle()
 
 if __name__ == '__main__':

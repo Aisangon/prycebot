@@ -1,6 +1,5 @@
 from pricebot.spiders.shop4de import Shop4DeSpider
 from pricebot.spiders.basecom import BaseComSpider
-from pricebot.spiders.quotes_spider import QuotesSpider
 
 class AllSpiders():
 
