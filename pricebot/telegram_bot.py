@@ -106,7 +106,7 @@ class PriceBot():
         else:
             update.message.reply_text('No results found.')
 
-        update.message.reply_text('These are your results! What would you want to do next?',
+        update.message.reply_text('These are your results! What would you like to do next?',
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
 
     def setQuery(self, query):
@@ -138,11 +138,9 @@ class PriceBot():
         dp.add_handler(conv_handler)
         dp.add_handler(CommandHandler('r', self.restart))
 
-        self.updater.start_polling()
-        # self.updater.start_webhook(listen="0.0.0.0", 
-        #                             port=int(PORT),
-        #                             url_path=TG_TOKEN)
-        # self.updater.bot.setWebhook(HEROKU_APP + TG_TOKEN)
+        # self.updater.start_polling()
+        self.updater.start_webhook(listen="0.0.0.0", port=int(PORT), url_path=TG_TOKEN)
+        self.updater.bot.setWebhook(HEROKU_APP + TG_TOKEN)
         self.updater.idle()
 
 if __name__ == '__main__':

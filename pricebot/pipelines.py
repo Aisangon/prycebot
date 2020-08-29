@@ -20,20 +20,20 @@ class PricebotPipeline:
         pub.subscribe(self.get_query, 'queryTopic')
 
     def process_item(self, item, spider):
-        self.format_item(item)
+        self.filter_item(item)
         return item
 
     def get_query(self, query):
         self.filter_query = query
         return self.filter_query
 
-    # Todo: Refactor
-    def format_item(self, item):
+    def format_item(self, link, name, desc):
+        if search(self.filter_query.lower(), str(name).lower()):
+            itemHtml = f"<a href='{link}'>{name}</a>: <strong>{desc}</strong>"
+            pub.sendMessage('rootTopic', arg1=itemHtml)
+
+    def filter_item(self, item):
         if 'name' in item:
-            if search(self.filter_query.lower(), str(item['name']).lower()):
-                itemHtml = "<a href='{0}'>{1}</a>: <strong>{2}</strong>".format(item['url'], item['name'], item['price'])
-                pub.sendMessage('rootTopic', arg1=itemHtml)
-        else:
-            if search(self.filter_query.lower(), str(item['position']).lower()):
-                itemHtml = "<a href='{0}'>{1}</a>: <strong>{2}</strong>".format(item['url'], item['position'], item['company'])
-                pub.sendMessage('rootTopic', arg1=itemHtml)
+            self.format_item(item['url'], item['name'], item['price'])
+        elif 'position' in item:
+            self.format_item(item['url'], item['position'], item['company'])

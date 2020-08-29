@@ -4,7 +4,7 @@ from pricebot.spiders.remotive import RemotiveSpider
 
 class AllSpiders():
 
-    def __init__(self, spider_list = None):
+    def __init__(self, spider_list = dict()):
         super().__init__()
         self._spider_list = spider_list
 
