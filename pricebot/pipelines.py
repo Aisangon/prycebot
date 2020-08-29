@@ -9,27 +9,9 @@
 from itemadapter import ItemAdapter
 from pubsub import pub
 from re import search
-
+from pricebot.items import Job, Product
 
 class PricebotPipeline:
-
-    filter_query = ''
-    def __init__(self):
-        super().__init__()
-        pub.subscribe(self.listener2, 'queryTopic')
-
-    def process_item(self, item, spider):
-        if search(self.filter_query.lower(), str(item['author']).lower()):
-            html = '<i>' + '- ' + item['author'] + '</i>'
-            pub.sendMessage('rootTopic', arg1=html)
-            
-        return item
-
-    def listener2(self, query):
-        self.filter_query = query
-        return self.filter_query
-
-class GamesPipeline:
 
     filter_query = ''
 
@@ -38,14 +20,20 @@ class GamesPipeline:
         pub.subscribe(self.get_query, 'queryTopic')
 
     def process_item(self, item, spider):
-        self.format_item(item)
+        self.filter_item(item)
         return item
 
     def get_query(self, query):
         self.filter_query = query
         return self.filter_query
 
-    def format_item(self, item):
-        if search(self.filter_query.lower(), str(item['name']).lower()):
-            itemHtml = "<a href='{0}'>{1}</a>: <strong>{2}</strong>".format(item['url'], item['name'], item['price'])
+    def format_item(self, link, name, desc):
+        if search(self.filter_query.lower(), str(name).lower()):
+            itemHtml = f"<a href='{link}'>{name}</a>: <strong>{desc}</strong>"
             pub.sendMessage('rootTopic', arg1=itemHtml)
+
+    def filter_item(self, item):
+        if 'name' in item:
+            self.format_item(item['url'], item['name'], item['price'])
+        elif 'position' in item:
+            self.format_item(item['url'], item['position'], item['company'])

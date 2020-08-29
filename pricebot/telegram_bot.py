@@ -23,11 +23,12 @@ from pricebot.all_spiders import AllSpiders
 class PriceBot():
 
     scraped_items = []
-    TYPEIN, CONFIRM, RESTART = range(3)
+    CHOOSE, CONFIRM, CRAWL, RESTART = range(4)
     temp_query = ''
+    category_choice = ''
 
-    def __init__(self, spiders):
-        self.spiders = spiders
+    def __init__(self, spider_categories):
+        self.spider_categories = spider_categories
         self.process = CrawlerProcess(get_project_settings())
 
         logger = logging.getLogger(__name__)
@@ -40,22 +41,35 @@ class PriceBot():
 
     def start(self, update, context):
         user = update.message.from_user
-        update.message.reply_text('Hi {0}! Please type in what you want to scrape.'.format(user.first_name))
+        reply_keyboard = [['Games', 'Jobs']]
 
-        return self.TYPEIN
+        update.message.reply_text('Hi {0}! Welcome to GoGetter. Please choose your category to scrape.'.format(user.first_name),
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
 
-    def typeIn(self, update, context):
+        return self.CHOOSE
+
+    def choose(self, update, context):
+        self.setChoice(update.message.text)
+        update.message.reply_text('Please type in what you want to scrape.')
+
+        return self.CONFIRM
+
+    def confirm(self, update, context):
         self.setQuery(update.message.text)
         reply_keyboard = [['Yes', 'No']]
 
         update.message.reply_text('Start scraping your choice?',
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
 
-        return self.CONFIRM
+        return self.CRAWL
 
     def crawl(self, update, context):
-        for spider in self.spiders:
-            self.process.crawl(spider)
+        update.message.reply_text('Please wait for results...')
+        category = dict(filter(lambda item: self.category_choice in item[0], self.spider_categories.items()))
+
+        for name, spider_list in category.items():
+            for spider in spider_list:
+                self.process.crawl(spider)
 
         d = self.process.join()
         d.addCallback(lambda result: self.successCallback(result, update))
@@ -85,22 +99,31 @@ class PriceBot():
 
     def successCallback(self, result, update):
         reply_keyboard = [['Another', 'Done']]
-        for message in self.scraped_items:
-            update.message.reply_text(message, parse_mode='HTML')
 
-        update.message.reply_text('These are your results! What would you want to do next?',
+        if self.scraped_items:
+            for message in self.scraped_items:
+                update.message.reply_text(message, parse_mode='HTML')
+        else:
+            update.message.reply_text('No results found.')
+
+        update.message.reply_text('These are your results! What would you like to do next?',
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
 
     def setQuery(self, query):
         self.temp_query = query
         return self.temp_query
 
+    def setChoice(self, choice):
+        self.category_choice = choice
+        return self.category_choice
+
     def initBot(self):
         conv_handler = ConversationHandler(
             entry_points=[CommandHandler('hi', self.start)],
             states={
-                self.TYPEIN: [MessageHandler(Filters.text & ~Filters.command, self.typeIn)],
-                self.CONFIRM: [MessageHandler(Filters.regex('^(Yes)$'), self.crawl),
+                self.CHOOSE: [MessageHandler(Filters.regex('^(Games|Jobs)$'), self.choose)],
+                self.CONFIRM: [MessageHandler(Filters.text & ~Filters.command, self.confirm)],
+                self.CRAWL: [MessageHandler(Filters.regex('^(Yes)$'), self.crawl),
                         MessageHandler(Filters.regex('^(No)$'), self.start)],
                 self.RESTART: [MessageHandler(Filters.regex('^(Another$)'), self.restart),
                         MessageHandler(Filters.regex('^(Done)$'), self.cancel)]
@@ -116,9 +139,7 @@ class PriceBot():
         dp.add_handler(CommandHandler('r', self.restart))
 
         # self.updater.start_polling()
-        self.updater.start_webhook(listen="0.0.0.0", 
-                                    port=int(PORT),
-                                    url_path=TG_TOKEN)
+        self.updater.start_webhook(listen="0.0.0.0", port=int(PORT), url_path=TG_TOKEN)
         self.updater.bot.setWebhook(HEROKU_APP + TG_TOKEN)
         self.updater.idle()
 

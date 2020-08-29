@@ -90,8 +90,7 @@ DOWNLOADER_MIDDLEWARES = {
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    # 'pricebot.pipelines.PricebotPipeline': 300,
-    'pricebot.pipelines.GamesPipeline': 400,
+    'pricebot.pipelines.PricebotPipeline': 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
