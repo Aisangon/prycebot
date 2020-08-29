@@ -27,12 +27,13 @@ class PricebotPipeline:
         self.filter_query = query
         return self.filter_query
 
+    # Todo: Refactor
     def format_item(self, item):
-        if isinstance(item, Product):
+        if 'name' in item:
             if search(self.filter_query.lower(), str(item['name']).lower()):
                 itemHtml = "<a href='{0}'>{1}</a>: <strong>{2}</strong>".format(item['url'], item['name'], item['price'])
+                pub.sendMessage('rootTopic', arg1=itemHtml)
         else:
             if search(self.filter_query.lower(), str(item['position']).lower()):
                 itemHtml = "<a href='{0}'>{1}</a>: <strong>{2}</strong>".format(item['url'], item['position'], item['company'])
-
-        pub.sendMessage('rootTopic', arg1=itemHtml)
+                pub.sendMessage('rootTopic', arg1=itemHtml)

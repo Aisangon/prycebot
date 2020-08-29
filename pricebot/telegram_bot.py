@@ -23,12 +23,12 @@ from pricebot.all_spiders import AllSpiders
 class PriceBot():
 
     scraped_items = []
-    CHOOSE, TYPEIN, CONFIRM, RESTART = range(4)
+    CHOOSE, CONFIRM, CRAWL, RESTART = range(4)
     temp_query = ''
     category_choice = ''
 
-    def __init__(self, spiders):
-        self.spiders = spiders
+    def __init__(self, spider_categories):
+        self.spider_categories = spider_categories
         self.process = CrawlerProcess(get_project_settings())
 
         logger = logging.getLogger(__name__)
@@ -52,12 +52,6 @@ class PriceBot():
         self.setChoice(update.message.text)
         update.message.reply_text('Please type in what you want to scrape.')
 
-        return self.TYPEIN
-
-    def typeIn(self, update, context):
-        self.setChoice(update.message.text)
-        update.message.reply_text('Please type in what you want to scrape.')
-
         return self.CONFIRM
 
     def confirm(self, update, context):
@@ -67,11 +61,15 @@ class PriceBot():
         update.message.reply_text('Start scraping your choice?',
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
 
-        return self.CONFIRM
+        return self.CRAWL
 
     def crawl(self, update, context):
-        for spider in self.spiders:
-            self.process.crawl(spider)
+        update.message.reply_text('Please wait for results...')
+        category = dict(filter(lambda item: self.category_choice in item[0], self.spider_categories.items()))
+
+        for name, spider_list in category.items():
+            for spider in spider_list:
+                self.process.crawl(spider)
 
         d = self.process.join()
         d.addCallback(lambda result: self.successCallback(result, update))
@@ -101,8 +99,12 @@ class PriceBot():
 
     def successCallback(self, result, update):
         reply_keyboard = [['Another', 'Done']]
-        for message in self.scraped_items:
-            update.message.reply_text(message, parse_mode='HTML')
+
+        if self.scraped_items:
+            for message in self.scraped_items:
+                update.message.reply_text(message, parse_mode='HTML')
+        else:
+            update.message.reply_text('No results found.')
 
         update.message.reply_text('These are your results! What would you want to do next?',
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
@@ -113,15 +115,15 @@ class PriceBot():
 
     def setChoice(self, choice):
         self.category_choice = choice
-        return self.temp_query
+        return self.category_choice
 
     def initBot(self):
         conv_handler = ConversationHandler(
             entry_points=[CommandHandler('hi', self.start)],
             states={
                 self.CHOOSE: [MessageHandler(Filters.regex('^(Games|Jobs)$'), self.choose)],
-                self.TYPEIN: [MessageHandler(Filters.text & ~Filters.command, self.typeIn)],
-                self.CONFIRM: [MessageHandler(Filters.regex('^(Yes)$'), self.crawl),
+                self.CONFIRM: [MessageHandler(Filters.text & ~Filters.command, self.confirm)],
+                self.CRAWL: [MessageHandler(Filters.regex('^(Yes)$'), self.crawl),
                         MessageHandler(Filters.regex('^(No)$'), self.start)],
                 self.RESTART: [MessageHandler(Filters.regex('^(Another$)'), self.restart),
                         MessageHandler(Filters.regex('^(Done)$'), self.cancel)]
