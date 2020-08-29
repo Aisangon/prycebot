@@ -1,6 +1,7 @@
 from pricebot.spiders.shop4de import Shop4DeSpider
 from pricebot.spiders.basecom import BaseComSpider
 from pricebot.spiders.remotive import RemotiveSpider
+from pricebot.spiders.remoteok import RemoteOkSpider
 
 class AllSpiders():
 
@@ -11,6 +12,6 @@ class AllSpiders():
     def get_list(self):
         self._spider_list = dict(
             Games=[Shop4DeSpider, BaseComSpider],
-            Jobs=[RemotiveSpider]
+            Jobs=[RemotiveSpider, RemoteOkSpider]
         )
         return self._spider_list
