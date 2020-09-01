@@ -73,6 +73,8 @@ class PriceBot():
 
         d = self.process.join()
         d.addCallback(lambda result: self.successCallback(result, update))
+        d.addErrback(lambda failure: self.failCallback(failure, update))
+
         pub.sendMessage('queryTopic', query=self.temp_query)
         self.process.start(stop_after_crawl=True)
 
@@ -108,6 +110,9 @@ class PriceBot():
 
         update.message.reply_text('These are your results! What would you like to do next?',
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+
+    def failCallback(self, failure, update):
+        update.message.reply_text('Something went wrong. Please restart bot.')
 
     def setQuery(self, query):
         self.temp_query = query
